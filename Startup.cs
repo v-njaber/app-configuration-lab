@@ -18,16 +18,15 @@ namespace configuration_lab
 
         public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
-            var builder = new ConfigurationBuilder()
-            .SetBasePath(env.ContentRootPath)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
-
-            Configuration = builder.Build();
+            // This will pull configuration from all sources, so it will work with azure app service configuration.
+            Configuration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // used to inject controllers with IConfiguration object.
             services.AddSingleton<IConfiguration>(provider => Configuration);
+            // Enables attribute 
             services.AddControllers();
         }
 
@@ -45,11 +44,23 @@ namespace configuration_lab
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
+                endpoints.MapGet("/working", async context =>
                 {
-                    await context.Response.WriteAsync("Hello World!");
+                    string connection = Configuration.GetConnectionString("MyDbConnection");
+                    if (connection == null || connection.Length == 0) connection = "Connnection string not found";
+                    await context.Response.WriteAsync(connection);
+                }); 
+                endpoints.MapGet("/not-working", async context =>
+                {
+                    string connection = new ConfigurationBuilder()
+                    .SetBasePath(env.ContentRootPath)
+                    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                    .Build()
+                    .GetConnectionString("MyDbConnection");
+
+                    if (connection == null || connection.Length == 0) connection = "Connnection string not found";
+                    await context.Response.WriteAsync(connection);
                 });
-                endpoints.MapControllers();
             });
 
 
