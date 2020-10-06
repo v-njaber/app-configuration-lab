@@ -16,18 +16,18 @@ namespace configuration_lab
         public Startup(IWebHostEnvironment env, IConfiguration configuration)
         {
             // This will pull configuration from all sources, so it will work with azure app service configuration.
-            Configuration = configuration;
+            WorkingConfiguration = configuration;
         }
 
         public void ConfigureServices(IServiceCollection services)
         {
             // used to inject controllers with IConfiguration object.
-            services.AddSingleton<IConfiguration>(provider => Configuration);
+            services.AddSingleton<IConfiguration>(provider => WorkingConfiguration);
             // Enables attribute 
             services.AddControllers();
         }
 
-        public IConfiguration Configuration { get; }
+        public IConfiguration WorkingConfiguration { get; }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -43,17 +43,17 @@ namespace configuration_lab
             {
                 endpoints.MapGet("/working", async context =>
                 {
-                    await sendConnectionStringResponse(context, Configuration);
+                    await sendConnectionStringResponse(context, WorkingConfiguration);
                 }); 
                 endpoints.MapGet("/not-working", async context =>
                 {
                     // This will pull configuration from appsettings.json only, so it won't work with azure app service configuration.
-                    var configuration = new ConfigurationBuilder()
+                    var NotWorkingConfiguration = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                     .Build();
                     
-                    await sendConnectionStringResponse(context, configuration);
+                    await sendConnectionStringResponse(context, NotWorkingConfiguration);
                 });
             });
 
