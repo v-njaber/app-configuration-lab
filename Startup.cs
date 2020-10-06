@@ -52,6 +52,7 @@ namespace configuration_lab
                 }); 
                 endpoints.MapGet("/not-working", async context =>
                 {
+                    // This will pull configuration from appsettings.json only, so it won't work with azure app service configuration.
                     string connection = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
