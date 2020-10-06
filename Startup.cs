@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -46,25 +43,26 @@ namespace configuration_lab
             {
                 endpoints.MapGet("/working", async context =>
                 {
-                    string connection = Configuration.GetConnectionString("MyDbConnection");
-                    if (connection == null || connection.Length == 0) connection = "Connnection string not found";
-                    await context.Response.WriteAsync(connection);
+                    await sendConnectionStringResponse(context, Configuration);
                 }); 
                 endpoints.MapGet("/not-working", async context =>
                 {
                     // This will pull configuration from appsettings.json only, so it won't work with azure app service configuration.
-                    string connection = new ConfigurationBuilder()
+                    var configuration = new ConfigurationBuilder()
                     .SetBasePath(env.ContentRootPath)
                     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                    .Build()
-                    .GetConnectionString("MyDbConnection");
-
-                    if (connection == null || connection.Length == 0) connection = "Connnection string not found";
-                    await context.Response.WriteAsync(connection);
+                    .Build();
+                    
+                    await sendConnectionStringResponse(context, configuration);
                 });
             });
 
 
+        }
+        public Task sendConnectionStringResponse(HttpContext context, IConfiguration configuration) {
+            string connection = configuration.GetConnectionString("MyDbConnection");
+            if (connection == null || connection.Length == 0) connection = "Connnection string not found";
+            return context.Response.WriteAsync(connection);
         }
 
     }
